@@ -2,6 +2,9 @@
 #   pytest test.py
 
 import math
+
+import pytest
+
 import geometric_algebra as ga
 
 
@@ -140,12 +143,26 @@ def test_grade_projection():
 
 def test_dot():
     e, e1, e2, e12 = ga.basis((2, 0))
+
     assert ga.dot(e1 + 3*e2, 2*e2 + 1*e1) == 7
+
+    with pytest.raises(AssertionError):
+        ga.dot(e, e1)
+
+    with pytest.raises(AssertionError):
+        ga.dot(e1, e1 + e12)
 
 
 def test_wedge():
     e, e1, e2, e12 = ga.basis((2, 0))
+
     assert ga.wedge(e1 + 3*e2, 2*e2 + 2*e1) == -4*e12
+
+    with pytest.raises(AssertionError):
+        ga.wedge(e, e1)
+
+    with pytest.raises(AssertionError):
+        ga.wedge(e1, e1 + e12)
 
 
 def test_commutator():

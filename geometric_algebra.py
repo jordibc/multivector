@@ -253,28 +253,28 @@ def reverse(a):
 
 def dot(a, b):
     """Return the dot product (inner product) of multivectors a and b."""
-    grades_a = [len(e) for _, e in a.blades]
-    grades_b = [len(e) for _, e in b.blades]
+    grades_a = {len(e) for _, e in a.blades}
+    grades_b = {len(e) for _, e in b.blades}
 
-    assert grades_a and grades_b, 'Dot not defined (yet) for scalars.'
-
-    ga, gb = grades_a[0], grades_b[0]
-    assert all(g == ga for g in grades_a) and all(g == gb for g in grades_b), \
+    assert len(grades_a) == 1 and len(grades_b) == 1, \
         'Can only dot blades (for the moment).'
+
+    ga, gb = grades_a.pop(), grades_b.pop()
+    assert ga != 0 and gb != 0, 'Dot not defined (yet) for scalars.'
 
     return (a * b)[abs(ga - gb)]
 
 
 def wedge(a, b):
     """Return the wedge product (exterior/outer product) of a and b."""
-    grades_a = [len(e) for _, e in a.blades]
-    grades_b = [len(e) for _, e in b.blades]
+    grades_a = {len(e) for _, e in a.blades}
+    grades_b = {len(e) for _, e in b.blades}
 
-    assert grades_a and grades_b, 'Wedge not defined (yet) for scalars.'
-
-    ga, gb = grades_a[0], grades_b[0]
-    assert all(g == ga for g in grades_a) and all(g == gb for g in grades_b), \
+    assert len(grades_a) == 1 and len(grades_b) == 1, \
         'Can only wedge blades (for the moment).'
+
+    ga, gb = grades_a.pop(), grades_b.pop()
+    assert ga != 0 and gb != 0, 'Wedge not defined (yet) for scalars.'
 
     return (a * b)[ga + gb]
 
