@@ -101,6 +101,6 @@ pytest test.py
 
 ## See also
 
-I developed a similar library in [clojure](clojure.org/), which shares
-the same internal representation for a multivector:
+I developed a similar library in [clojure](https://clojure.org), which
+shares the same internal representation for a multivector:
 [geometric-algebra](https://gitlab.com/jordibc/geometric-algebra).
