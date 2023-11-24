@@ -146,11 +146,9 @@ def test_dot():
 
     assert ga.dot(e1 + 3*e2, 2*e2 + 1*e1) == 7
 
-    with pytest.raises(AssertionError):
-        ga.dot(e, e1)
+    assert ga.dot(e, e1) == 0
 
-    with pytest.raises(AssertionError):
-        ga.dot(e1, e1 + e12)
+    assert ga.dot(e1, e1 + e12) == 1 + e2
 
 
 def test_wedge():
@@ -158,11 +156,11 @@ def test_wedge():
 
     assert ga.wedge(e1 + 3*e2, 2*e2 + 2*e1) == -4*e12
 
-    with pytest.raises(AssertionError):
-        ga.wedge(e, e1)
+    assert ga.wedge(e, e1) == e1
 
-    with pytest.raises(AssertionError):
-        ga.wedge(e1, e1 + e12)
+    assert ga.wedge(e1, e1 + e2) == e12
+
+    assert ga.wedge(e1, e1 + e12) == 0
 
 
 def test_commutator():

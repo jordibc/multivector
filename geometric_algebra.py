@@ -20,6 +20,7 @@ class MultiVector:
         return add(self, v)
 
     def __radd__(self, v):  # number + multivector
+        assert type(v) in [int, float]
         return add(v, self)
 
     def __neg__(self):  # - self
@@ -31,28 +32,18 @@ class MultiVector:
         return MultiVector(blades, self.signature)
 
     def __sub__(self, v):  # multivector - whatever
-        return self + -v
+        return sub(self, v)
 
     def __rsub__(self, v):  # number - multivector
         assert type(v) in [int, float]
-        return v + -self
+        return sub(v, self)
 
     def __mul__(self, v):  # multivector * whatever  (geometric product)
-        assert type(v) in [int, float] or v.signature == self.signature
-
-        v_blades = [[v, []]] if type(v) in [int, float] else v.blades
-
-        prod = []
-        for x, ei in self.blades:
-            for y, ej in v_blades:
-                elem, factor = simplify_element(ei + ej, self.signature)
-                prod.append([factor * x * y, elem])
-
-        return MultiVector(prod, self.signature)
+        return prod(self, v)
 
     def __rmul__(self, v):  # number * multivector
         assert type(v) in [int, float]
-        return self * v
+        return prod(self, v)
 
     def __truediv__(self, v):  # multivector / whatever
         if type(v) in [int, float]:
@@ -220,6 +211,31 @@ def add(a, b):
                            a.signature)
 
 
+def sub(a, b):
+    """Return a - b."""
+    return a + -b
+
+
+def prod(a, b):
+    """Return the geometric product a * b."""
+    assert type(b) in [int, float] or b.signature == a.signature
+
+    b_blades = [[b, []]] if type(b) in [int, float] else b.blades
+
+    prod_blades = []
+    for x, ei in a.blades:
+        for y, ej in b_blades:
+            elem, factor = simplify_element(ei + ej, a.signature)
+            prod_blades.append([factor * x * y, elem])
+
+    return MultiVector(prod_blades, a.signature)
+
+
+def grades(a):
+    """Return the grades present in multivector a."""
+    return sorted(set(len(e) for _, e in a.blades))
+
+
 def pow(a, n):
     """Return a**n."""
     if not a.blades:  # a == 0
@@ -239,6 +255,21 @@ def pow(a, n):
         return 1/v
 
 
+def is_scalar(a):
+    return (type(a) in [int, float] or  # a number
+            not a.blades or  # 0
+            len(a.blades) == 1 and a.blades[0][1] == [])  # scalar basis element
+
+
+def scalar(a):
+    assert is_scalar(a)
+    return 0 if not a.blades else a.blades[0][0]
+
+
+def norm(a):
+    return scalar(a * a.T)**0.5
+
+
 def reverse(a):
     """Return the reverse of multivector a. For example: e12 -> e21 = -e12."""
     blades = [blade.copy() for blade in a.blades]
@@ -253,30 +284,35 @@ def reverse(a):
 
 def dot(a, b):
     """Return the dot product (inner product) of multivectors a and b."""
-    grades_a = {len(e) for _, e in a.blades}
-    grades_b = {len(e) for _, e in b.blades}
+    if is_scalar(a) or is_scalar(b):
+        return 0
 
-    assert len(grades_a) == 1 and len(grades_b) == 1, \
-        'Can only dot blades (for the moment).'
+    c = MultiVector([], a.signature)  # 0
 
-    ga, gb = grades_a.pop(), grades_b.pop()
-    assert ga != 0 and gb != 0, 'Dot not defined (yet) for scalars.'
+    for r in grades(a):
+        for s in grades(b):
+            if r > 0 and s > 0:
+                c += (a[r] * b[s])[abs(r-s)]
 
-    return (a * b)[abs(ga - gb)]
+    return c
 
 
 def wedge(a, b):
     """Return the wedge product (exterior/outer product) of a and b."""
-    grades_a = {len(e) for _, e in a.blades}
-    grades_b = {len(e) for _, e in b.blades}
+    c = MultiVector([], a.signature)  # 0
 
-    assert len(grades_a) == 1 and len(grades_b) == 1, \
-        'Can only wedge blades (for the moment).'
+    for r in grades(a):
+        for s in grades(b):
+            c += (a[r] * b[s])[r+s]
 
-    ga, gb = grades_a.pop(), grades_b.pop()
-    assert ga != 0 and gb != 0, 'Wedge not defined (yet) for scalars.'
+    return c
 
-    return (a * b)[ga + gb]
+
+def antiwedge(a, b):
+    """Return the antiwedge product (regressive/meet) of a and b."""
+    i = MultiVector([[1, list(a.signature.keys())]], a.signature)
+    i_inv = 1/i
+    return ((a * i_inv) ^ (b * i_inv)) * i
 
 
 def commutator(a, b):
